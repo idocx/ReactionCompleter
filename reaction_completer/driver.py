@@ -3,6 +3,7 @@ import re
 from collections import defaultdict
 from functools import reduce
 from operator import or_
+from signal import raise_signal
 from tokenize import TokenError
 from nltk.metrics.distance import edit_distance
 from reaction_completer import ReactionCompleter
@@ -273,6 +274,7 @@ def balance_recipe(precursors, targets, sentences=None):
                     'precursors: %r: %r',
                     target_object.material_formula,
                     [x.material_formula for x in precursor_candidates], e_subset)
+                raise
         except TooManyPrecursors as e:
             precursor_candidates = find_precursors_in_same_sentence(precursors_to_balance, sentences)
 
@@ -280,6 +282,7 @@ def balance_recipe(precursors, targets, sentences=None):
                 logging.debug('No possible precursor subsets for target: %s, precursors: %r: %r',
                               target_object.material_formula,
                               [x.material_formula for x in precursors_to_balance], e)
+                raise
             else:
                 success = False
                 # Iterate over all candidate precursors, and find the first success
@@ -296,19 +299,23 @@ def balance_recipe(precursors, targets, sentences=None):
                             'precursors: %r: %r',
                             target_object.material_formula,
                             [x.material_formula for x in candidates], e_subset)
+                        raise
 
                 if not success:
                     logging.debug('Cannot find a subset of precursors for '
                                   'target: %s, precursors: %r: %r',
                                   target_object.material_formula,
                                   [x.material_formula for x in precursors_to_balance], e)
+                    raise
 
         except (CannotBalance, TokenError) as e:
             logging.debug('Cannot balance reaction for target: %s, precursors: %r: %r',
                           target_object.material_formula,
                           [x.material_formula for x in precursors_to_balance], e)
+            raise
         except Exception as e:
             logging.warning('Unexpected error for target: %s, precursors: %r: %r',
                             target_object.material_formula,
                             [x.material_formula for x in precursors_to_balance], e)
+            raise
     return solutions
